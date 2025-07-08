@@ -1,7 +1,7 @@
 ## 지금까지 했던 웹 페이지 제작기 중 ManagerManagement.jsx 파일 내 코드들 공부 (2025.07.08)
 
 ### 기본 import문
-`import React, { useState } from 'react';
+```import React, { useState } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, TextField, IconButton, Button, Typography
 } from '@mui/material';
@@ -21,7 +21,7 @@ import { push, ref, set, update } from 'firebase/database';
 import { realtimeDb } from '../firebase'; 
 import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';`
+import Tab from '@mui/material/Tab';```
 
 - 나에게 필요한 모듈 가져오기
 - import {모듈 내 가져올 멤버} from 모듈
@@ -31,7 +31,7 @@ import Tab from '@mui/material/Tab';`
 ---
 
 ### TabPanel 컴포넌트
-`const TabPanel = ({ children, value, index }) => {
+```const TabPanel = ({ children, value, index }) => {
   return (
     <div hidden={value !== index}>
       {value === index && (
@@ -39,7 +39,7 @@ import Tab from '@mui/material/Tab';`
       )}
     </div>
   );
-};`
+};```
 
 - 탭 메뉴 전환 시 해당되는 내용만 보여줌
   - value: 현재 내가 선택한 탭 번호, index: 각 탭의 고유 번호 (아래 UI 부분에 고유 번호 부여됨)
@@ -50,12 +50,12 @@ import Tab from '@mui/material/Tab';`
 ---
 
 ### useState 상태관리
-`const [tabIndex, setTabIndex] = useState(0); 
+```const [tabIndex, setTabIndex] = useState(0); 
 const [open, setOpen] = useState(false); 
 const [title, setTitle] = useState('');
 const [url, setUrl] = useState('');
 const [isPinned, setIsPinned] = useState(false);
-const [notices, setNotices] = useState([]);`
+const [notices, setNotices] = useState([]);```
 
 - 화면에서 사용자가 어떤 동작을 했는지, 어떤 데이터를 가지고 있는지 기억
 - **const [상태변수, 상태변수를 바꾸는 함수] = useState(초기값)**
@@ -63,16 +63,16 @@ const [notices, setNotices] = useState([]);`
 ---
 
 ### 탭 전환 함수
-`const handleTabChange = (event, newValue) => {
+```const handleTabChange = (event, newValue) => {
   setTabIndex(newValue);
-};`
+};```
 
 - 사용자가 탭을 눌렀을 때 어떤 탭이 선택됐는지 저장하는 역할
   - 탭 0번을 누르면 setTabIndex(0)
   - 탭 1번을 누르면 setTabIndex(1)
   - 탭 2번을 누르면 setTabIndex(2) ...
 - 현재 선택된 탭 번호를 저장해야만 TabPanel 컴포넌트에서 조건을 보고 내용을 보여줄 수 있음
-- `<Tabs
+- ```<Tabs
           value={tabIndex}
           onChange={handleTabChange}
           ...
@@ -83,7 +83,7 @@ const [notices, setNotices] = useState([]);`
           ...
         }}
       >
-        <TabPanel value={tabIndex} index={0}>관리자 역할 구분</TabPanel>`
+        <TabPanel value={tabIndex} index={0}>관리자 역할 구분</TabPanel>```
   - 1. Tabs 컴포넌트는 동작 시 onChange 함수를 실행시킴
   - 2. handleTabChange 실행
   - 3. setTabIndex 상태 업테이트 함수를 통해 tabIndex의 값을 사용자가 누른 인덱스 값으로 바꿈
@@ -91,7 +91,7 @@ const [notices, setNotices] = useState([]);`
 ---
 
 ### 공지사항 등록 함수
-`const handleSubmit = () => {
+```const handleSubmit = () => {
   const newNotice = {
     title,
     url,
@@ -106,20 +106,20 @@ const [notices, setNotices] = useState([]);`
   setUrl('');
   setIsPinned(false);
  }; 
-`
+```
 
 - newNotice는 여러개의 입력값을 하나의 객체로 묶은 것
   - Kotlin으로 치면 data class랑 비슷한 역할이라고 생각하면 됨
 - newRef는 Firebase 내 realtime DB의 경로를 가르키는 레퍼런스
   - push()는 firebase에서 고유한 키를 자동으로 만들어주는 함수
   - ref()는 어디에 저장할 건지 경로를 지정해줌 (notices에 저장)
-  - `<TextField
+  - ```<TextField
         label="제목"
         fullWidth
         margin="normal"
         value={title}
         onChange={e => setTitle(e.target.value)}
-    />` 와 같이 사용자가 입력한 값을 useState의 setTitle을 사용해 입력값 변경
+    />``` 와 같이 사용자가 입력한 값을 useState의 setTitle을 사용해 입력값 변경
   - `<Button variant="contained" onClick={handleSubmit}>등록</Button>` 에서 클릭 시 handleSubmit 함수를 실행시키므로 사용자가 입력한 값을 useState의 함수들을 사용해서 입력값을 데이터베이스의 키에 각각 저장
 - set(newRef, newNotice);
   - firebase에 데이터를 저장하는 핵심 명령어
@@ -131,7 +131,7 @@ const [notices, setNotices] = useState([]);`
 ---
 
 ### Firebase 데이터 실시간 수신
-`useEffect(() => {
+```useEffect(() => {
   const noticesRef = ref(realtimeDb, 'notices');
   onValue(noticesRef, snapshot => {
     const data = snapshot.val();
@@ -146,7 +146,7 @@ const [notices, setNotices] = useState([]);`
       setNotices([]);
     }
   });
-}, []);`
+}, []);```
 
 - useEffect => 창이 실행될 때 가장 먼저 한 번 실행되는 로직
 - const noticesRef = ref(realtimeDb, 'notices'); => noticesRef는 데이터베이스의 notices를 참조
@@ -161,16 +161,16 @@ const [notices, setNotices] = useState([]);`
 ---
 
 ### 별 클릭으로 고정 상태 바꾸기
-`const togglePinned = (id, currentState) => {
+```const togglePinned = (id, currentState) => {
   const noticeRef = ref(realtimeDb, `notices/${id}`);
   update(noticeRef, { isPinned: !currentState });
-};`
+};```
 
 - togglePinned 함수는 id와 currentState를 요소로 가짐
 - **공지사항 등록하는 팝업창 안에서 별표시 아이콘 클릭**
-  - `<IconButton onClick={() => setIsPinned(prev => !prev)}>
+  - ```<IconButton onClick={() => setIsPinned(prev => !prev)}>
                   {isPinned ? <StarIcon color="primary" /> : <StarBorderIcon />}
-                </IconButton>`
+                </IconButton>```
   - 원래 ispinned의 초기값은 false, 클릭이 되면 setIsPinned를 통해 !flase인 true가 됨 -> 위 데이터 실시간 수신으로 데이터가 동적으로 변환
   - isPinned에서 true이면 starIcon의 컬러가 노란색으로 바뀜
 - **공지사항 목록에서 별표시 클릭**
@@ -196,7 +196,7 @@ const [notices, setNotices] = useState([]);`
   - boxShadow => 그림자
   - maxWidth, maxHeight, min~ => 높이, 너비 제한 
 #### 세부 기능 목록 UI
-`return (
+```return (
     <Box sx={{ width: '100%' }}>
       <Box
         sx={{
@@ -217,7 +217,7 @@ const [notices, setNotices] = useState([]);`
           <Tab label="일정 등록 및 관리" />
           <Tab label="공지사항 등록 및 관리" />
         </Tabs>
-      </Box>`
+      </Box>```
 
 - varient => 탭 스타일 (scrollable, fullWidth 등)
 - centered => 탭들을 화면 가운데로 정렬 (default => 왼쪽 정렬)
@@ -227,7 +227,7 @@ const [notices, setNotices] = useState([]);`
 
 #### 각 탭 내 내용
 
-`<Box
+```<Box
         sx={{
           backgroundColor: '#f5f5f5',
           borderRadius: 2,
@@ -248,7 +248,7 @@ const [notices, setNotices] = useState([]);`
             sx={{ mb: 2 }}
           >
             새 공지사항 등록
-          </Button>`
+          </Button>```
 
 - TapPanel => 탭 번호가 ~번일 때만 안의 내용 보여줌(위의 TapPanel 컴포넌트에 서술)
 - 3번 인덱스 탭 클릭 시 setOpen(true)로 아래 Dialog 오픈
@@ -256,7 +256,7 @@ const [notices, setNotices] = useState([]);`
 ---
 #### 공지사항 등록 기능 팝업창
 
-`<Dialog open={open} onClose={() => setOpen(false)}>
+```<Dialog open={open} onClose={() => setOpen(false)}>
             <DialogTitle>공지사항 등록</DialogTitle>
             <DialogContent>
               <TextField
@@ -284,13 +284,13 @@ const [notices, setNotices] = useState([]);`
                 <Button onClick={() => setOpen(false)} sx={{ ml: 1 }}>취소</Button>
               </Box>
             </DialogContent>
-          </Dialog>`
+</Dialog>```
 
 - 
 
 ---
 
-`<TableContainer component={Paper}>
+```<TableContainer component={Paper}>
             <Table>
               <TableHead>
                 <TableRow>
@@ -320,4 +320,4 @@ const [notices, setNotices] = useState([]);`
           </TableContainer>
         </TabPanel>
       </Box>
-    </Box>`
+    </Box>```
