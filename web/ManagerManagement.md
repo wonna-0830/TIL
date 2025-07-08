@@ -21,7 +21,8 @@ import { push, ref, set, update } from 'firebase/database';
 import { realtimeDb } from '../firebase'; 
 import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';```
+import Tab from '@mui/material/Tab';
+```
 
 - 나에게 필요한 모듈 가져오기
 - import {모듈 내 가져올 멤버} from 모듈
@@ -39,7 +40,8 @@ import Tab from '@mui/material/Tab';```
       )}
     </div>
   );
-};```
+};
+```
 
 - 탭 메뉴 전환 시 해당되는 내용만 보여줌
   - value: 현재 내가 선택한 탭 번호, index: 각 탭의 고유 번호 (아래 UI 부분에 고유 번호 부여됨)
@@ -55,7 +57,8 @@ const [open, setOpen] = useState(false);
 const [title, setTitle] = useState('');
 const [url, setUrl] = useState('');
 const [isPinned, setIsPinned] = useState(false);
-const [notices, setNotices] = useState([]);```
+const [notices, setNotices] = useState([]);
+```
 
 - 화면에서 사용자가 어떤 동작을 했는지, 어떤 데이터를 가지고 있는지 기억
 - **const [상태변수, 상태변수를 바꾸는 함수] = useState(초기값)**
@@ -65,7 +68,8 @@ const [notices, setNotices] = useState([]);```
 ### 탭 전환 함수
 ```const handleTabChange = (event, newValue) => {
   setTabIndex(newValue);
-};```
+};
+```
 
 - 사용자가 탭을 눌렀을 때 어떤 탭이 선택됐는지 저장하는 역할
   - 탭 0번을 누르면 setTabIndex(0)
@@ -83,11 +87,13 @@ const [notices, setNotices] = useState([]);```
           ...
         }}
       >
-        <TabPanel value={tabIndex} index={0}>관리자 역할 구분</TabPanel>```
+        <TabPanel value={tabIndex} index={0}>관리자 역할 구분</TabPanel>
+  ```
   - 1. Tabs 컴포넌트는 동작 시 onChange 함수를 실행시킴
   - 2. handleTabChange 실행
   - 3. setTabIndex 상태 업테이트 함수를 통해 tabIndex의 값을 사용자가 누른 인덱스 값으로 바꿈
   - 4. TabPanel 내 value={tabIndex} 를 통해 저장된 인덱스 번호를 조회 해 내용을 보여줄 수 있음
+
 ---
 
 ### 공지사항 등록 함수
@@ -146,7 +152,8 @@ const [notices, setNotices] = useState([]);```
       setNotices([]);
     }
   });
-}, []);```
+}, []);
+```
 
 - useEffect => 창이 실행될 때 가장 먼저 한 번 실행되는 로직
 - const noticesRef = ref(realtimeDb, 'notices'); => noticesRef는 데이터베이스의 notices를 참조
@@ -164,7 +171,8 @@ const [notices, setNotices] = useState([]);```
 ```const togglePinned = (id, currentState) => {
   const noticeRef = ref(realtimeDb, `notices/${id}`);
   update(noticeRef, { isPinned: !currentState });
-};```
+};
+```
 
 - togglePinned 함수는 id와 currentState를 요소로 가짐
 - **공지사항 등록하는 팝업창 안에서 별표시 아이콘 클릭**
@@ -217,7 +225,8 @@ const [notices, setNotices] = useState([]);```
           <Tab label="일정 등록 및 관리" />
           <Tab label="공지사항 등록 및 관리" />
         </Tabs>
-      </Box>```
+      </Box>
+```
 
 - varient => 탭 스타일 (scrollable, fullWidth 등)
 - centered => 탭들을 화면 가운데로 정렬 (default => 왼쪽 정렬)
@@ -248,7 +257,8 @@ const [notices, setNotices] = useState([]);```
             sx={{ mb: 2 }}
           >
             새 공지사항 등록
-          </Button>```
+          </Button>
+  ```
 
 - TapPanel => 탭 번호가 ~번일 때만 안의 내용 보여줌(위의 TapPanel 컴포넌트에 서술)
 - 3번 인덱스 탭 클릭 시 setOpen(true)로 아래 Dialog 오픈
@@ -284,7 +294,8 @@ const [notices, setNotices] = useState([]);```
                 <Button onClick={() => setOpen(false)} sx={{ ml: 1 }}>취소</Button>
               </Box>
             </DialogContent>
-</Dialog>```
+</Dialog>
+```
 
 - 
 
@@ -320,4 +331,5 @@ const [notices, setNotices] = useState([]);```
           </TableContainer>
         </TabPanel>
       </Box>
-    </Box>```
+    </Box>
+  ```
