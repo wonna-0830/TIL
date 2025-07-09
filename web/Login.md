@@ -2,7 +2,8 @@
 ### 기본 import문 일부와 useState는 서술 X (ManagerManagement.jsx 참고)
 
 ### import문
-```import { useNavigate } from "react-router-dom";
+```
+import { useNavigate } from "react-router-dom";
 import { signInWithEmailAndPassword} from "firebase/auth";
 ```
 
@@ -10,7 +11,8 @@ import { signInWithEmailAndPassword} from "firebase/auth";
 - firebase/auth 기능 중 로그인 기능에 필요한 모듈 import
 
 ### 패스워드 노출 로직
-```let passwordTimeoutRef = useRef(null);
+```
+let passwordTimeoutRef = useRef(null);
   
     const togglePasswordVisibility = () => {
     setShowPassword(true);
@@ -39,7 +41,8 @@ import { signInWithEmailAndPassword} from "firebase/auth";
 ---
 
 ### useEffect
-```useEffect(() => {
+```
+useEffect(() => {
     const savedId = localStorage.getItem("savedId");
     if (savedId) {
       setId(savedId);
@@ -54,7 +57,8 @@ import { signInWithEmailAndPassword} from "firebase/auth";
 ---
 
 ### 로그인 로직
-```const handleLogin = async () => {
+```
+const handleLogin = async () => {
     if(!id || !password) {
         alert("이메일과 비밀번호를 입력해주세요.")
         return
@@ -112,17 +116,20 @@ import { signInWithEmailAndPassword} from "firebase/auth";
   - else 아니면 알림창 띄움
 - catch를 통해서 알림창으로 뜨는 에러코드를 사용자 친화적으로 텍스트 변경
 - 도식화
-  - ```[사용자 입력] → [빈칸 체크] → [이메일 형식 만들기]  
+  - ```
+  [사용자 입력] → [빈칸 체크] → [이메일 형식 만들기]  
 → [Firebase 로그인 요청] → [로그인 성공 시 uid 확인]  
 → [RealtimeDB에서 관리자 데이터 조회]  
 → (O) 데이터 있음 → 홈으로 이동  
-→ (X) 데이터 없음 → 경고창```
+→ (X) 데이터 없음 → 경고창
+```
   
 
 ---
 
 ### 회원가입 버튼 로직
-```const handleRegister = () => {
+```
+const handleRegister = () => {
     navigate("/Register");
   };
 ```
@@ -132,7 +139,8 @@ import { signInWithEmailAndPassword} from "firebase/auth";
 ---
 
 ### 엔터키 클릭 시 로그인 로직 수행
-```const handleKeyDown = (e) => {
+```
+const handleKeyDown = (e) => {
   if (e.key === 'Enter') {
     handleLogin(); // 엔터 누르면 로그인 함수 실행
   }
@@ -159,7 +167,8 @@ import { signInWithEmailAndPassword} from "firebase/auth";
 ---
 
 ### UI
-```return (
+```
+return (
     <div className="max-w-2xl mx-auto p-10">
       <div className="bg-white shadow-md rounded p-9">
         <h2 className="text-2xl font-bold mb-3 text-balance text-black">관리자 로그인</h2>
@@ -225,4 +234,4 @@ import { signInWithEmailAndPassword} from "firebase/auth";
   );
 ```
 
-- f
+- 
