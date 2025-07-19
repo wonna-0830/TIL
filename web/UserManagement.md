@@ -76,7 +76,7 @@ const UserManagement = () => {
   - 구분에 보여줄 데이터들이 있는 것만 골라서 `filteredUsers.map`을 통해 보여줌
 
 
-## 필터링된 목록 보여주기
+## 검색 필터링 기능
 ```
   useEffect(() => {
     const filtered = allUsers.filter((user) =>
