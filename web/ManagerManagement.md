@@ -190,146 +190,295 @@ const [notices, setNotices] = useState([]);
 - 별표 클릭 시 isPinned의 값을 반전시켜줘야하기 때문에 필요한 함수
 
 ---
+### 관리자 계정에 권한 설정하기
+- userTable 컴포넌트 내 메뉴에 권한 설정 버튼을 추가로 넣고 부여할 권한 선택
 
-### return 내 UI 구조
-- **공통 sx**
-  - Box => Material UI에서 제공하는 기본 레이아웃 박스
-  - Tabs => 여러개의 버튼을 가로로 나열해서 탭을 만들어 클릭할 때마다 내용을 바꾸는 UI
-  - Tab => Tabs 내의 버튼 하나하나를 나타내는 컴포넌트
-  - Dialog => 팝업창 역할 (open이 true이면 열림) (DialogTitle => 팝업 제목, DialogContent => 핵심 내용)
-  - TextField => 텍스트 입력창
-  - py => padding y (위아래 여백), px => padding x (좌우 여백)
-  - borderRadius => 모서리 둥글게
-  - marginTop => 위쪽과 간격 (marginBottom ...등) => mt, mb로도 사용가능
-  - boxShadow => 그림자
-  - maxWidth, maxHeight, min~ => 높이, 너비 제한 
-#### 세부 기능 목록 UI
-```return (
-    <Box sx={{ width: '100%' }}>
-      <Box
-        sx={{
-          backgroundColor: '#fff',
-          py: 1,
-          px: 5,
-          boxShadow: 1,}}>
-        <Tabs
-          value={tabIndex}
-          onChange={handleTabChange}
-          textColor="primary"
-          indicatorColor="primary"
-          variant="standard" 
-          centered             
-          sx={{minWidth: 'fit-content',  }}>
-          <Tab label="관리자 역할 구분" />
-          <Tab label="주요 기능 접근 제한" />
-          <Tab label="일정 등록 및 관리" />
-          <Tab label="공지사항 등록 및 관리" />
-        </Tabs>
-      </Box>
+#### permissionUtils.js
+```export const hasPermission = (admin, key) => {
+  return admin?.name === '박정원' || admin?.permissions?.[key];
+};
+```
+- 특정 관리자에게 어떤 기능(key)에 대한 권한이 있는지 확인할 때 사용
+- `admin?.name === '박정원'` -> 이름이 박정원이면 무조건 true
+- `admin?.permissions?.[key]` -> 그 외에는 해당 key 권한이 true 인지 확인해야됨
+
+#### AdminContext.jsx
+```const AdminContext = createContext(null);
+
+export const AdminProvider = ({ children }) => {
+  const [admin, setAdmin] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        console.log("✅ 로그인된 유저 UID:", user.uid);
+        const snapshot = await get(ref(realtimeDb, `admin/${user.uid}`));
+        const adminData = snapshot.val();
+        if (adminData) {
+          setAdmin({ uid: user.uid, ...adminData });
+        } else {
+          setAdmin(null); // 데이터는 없지만 로그인은 되어 있는 경우
+        }
+      } else {
+        setAdmin(null);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  return (
+    <AdminContext.Provider value={admin}>
+      {children}
+    </AdminContext.Provider>
+  );
+};
+
+export const useAdmin = () => useContext(AdminContext);
 ```
 
-- varient => 탭 스타일 (scrollable, fullWidth 등)
-- centered => 탭들을 화면 가운데로 정렬 (default => 왼쪽 정렬)
-- minWidth: 'fit-content' => 탭 바의 최소 너비를 내용 크기만큼 맞춤
+- `const AdminContext = createContext(null);` -> AdminContext 생성, 데이터를 저장하거나 꺼냄
+- `export const AdminProvider = ({ children }) => {` -> Context에 어떤 값을 줄 지 결정하는 컴포넌트
+  - `const unsubscribe = onAuthStateChanged(auth, async (user) => {` -> 사용자의 로그인 상태가 바뀔 때 마다 자동으로 호출됨
+  - 로그인 상태면 해당 uid로 realtimeDB의 admin 에서 정보를 가져옴
+  - 관리자데이터가 있으면 setAdmin으로 상태 저장
+  - 없으면 null로 설정해 권한 없는 사용자 처리
+- `<AdminContext.Provider value={admin}>` -> 하위 모든 컴포넌트에서 AdminContext를 통해 admin 데이터를 사용 가능하게 됨 
+
+#### Permissions.js
+```export const ALL_PERMISSIONS = {
+  "회원 관리": true,
+  "노선 추가/삭제": true,
+  "노선 시간대 설정 및 관리": true,
+  "노선 정류장 설정 및 관리": true,
+  "날짜별 예약자 목록": true,
+  "예약 통계": true,
+  "예약 취소 분석": true,
+  "기사별 운행 이력": true,
+  "기사 계정 관리": true,
+  "관리자 역할 구분": true,
+  "일정 등록 및 관리": true,
+  "공지사항 등록 및 관리": true
+};
+```
+- 각 사용자에 대해서 권한을 줄 목록들을 나열 
+
+#### useEffect 내 사용자 불러올 때 슈퍼계정 필터링하기
+```const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+const [selectedUserForRole, setSelectedUserForRole] = useState(null);
+
+//사용자 불러오기
+useEffect(() => {
+  const fetchUsers = async () => {
+    const snapshot = await get(ref(realtimeDb, "admin"));
+    const usersData = snapshot.val();
+    const usersArray = Object.entries(usersData).map(([uid, value]) => ({
+      uid,
+      ...value,
+    }));
+    
+    setAllUsers(usersArray);  // 슈퍼 계정도 포함
+    setFilteredUsers(usersArray.filter(user => user.name !== "박정원"));
+  };
+  fetchUsers();
+}, []);
+```
+- 기존 사용자 불러오는 로직에서 `setFilteredUsers(usersArray.filter(user => user.name !== "박정원"));` 이 변경됨
+  - AllUsers는 모든 관리자 계정을 저장, 하지만 FilteredUsers은 목록에 슈퍼계정을 제외한 일반 관리자 목록을 다뤄야하기 때문에 이름이 "박정원"인 관리자를 제외한 나머지 관리자만 필터링
+
+#### handleOpenRoleDialog 로직 (권한 설정 다이얼로그)
+```const handleOpenRoleDialog = async (user) => {
+  if (user.name === "박정원") {
+    const userRef = ref(realtimeDb, `admin/${user.uid}/permissions`);
+    await set(userRef, ALL_PERMISSIONS);
+    alert("슈퍼 계정은 모든 권한이 자동 부여됩니다.");
+    return;
+  }
+  setSelectedUserForRole(user);
+  setIsRoleDialogOpen(true);
+};
+```
+- `if (user.name === "박정원")` -> 유저 이름이 "박정원"이면 realtimeDb의 admin/${user.uid}/permissions의 데이터를 저장
+  - "박정원"의 permissions 내 데이터에 모든 권한을 true로
+  - "슈퍼 계정은 모든 권한이 자동 부여됩니다."라는 알림창 띄우기
+  - `return;`으로 끝
+- 유저 이름이 "박정원" 제외한 다른 관리자들이면?
+  - selectedUserForRole -> 해당 유저 데이터로 변환
+  - isRoleDialogOpen -> true로
+
+
+```const handleSaveRoles = async (updatedPermissions) => {
+  if (!selectedUserForRole) return;
+
+  const userRef = ref(realtimeDb, `admin/${selectedUserForRole.uid}/permissions`);
+  await set(userRef, updatedPermissions);
+
+  alert("권한이 저장되었습니다.");
+  setIsRoleDialogOpen(false);
+};
+```
+```<RoleDialog
+  open={isRoleDialogOpen}
+  onClose={() => setIsRoleDialogOpen(false)}
+  user={selectedUserForRole}
+  onSave={handleSaveRoles}
+  initialPermissions={selectedUserForRole?.permissions || {}}
+/>
+```
+- `isRoleDialogOpen`가 true로 되면서 다이얼로그 오픈
+- `if (!selectedUserForRole) return;` -> selectedUserForRole 내 데이터가 없으면 return;
+- realtimeDb내 selectedUserForRole의 유저의 permissions을 가져와 userRef에 저장
+- userRef에 업데이트된 권한 updatedPermissions 저장
+- 권한 저장 완료 알림창을 띄운 후 isRoleDialog 상태를 false로
 
 ---
 
-#### 각 탭 내 내용
+### UserTable 컴포넌트를 이용한 admin 사용자 목록 내 기능
+- UserManagement.jsx`참고
+```
+    useEffect(() => {
+      const filtered = allUsers.filter((user) => {
+      const nameMatch = (user.name ?? '').toLowerCase().includes(searchKeyword.toLowerCase());
+      const idWithEmail = user.id?.includes('@') ? user.id : `${user.id}@gmail.com`;
+      const idMatch = idWithEmail.toLowerCase().includes(searchKeyword.toLowerCase());
+      return nameMatch || idMatch;
+      });
+      setFilteredUsers(filtered);
+    }, [searchKeyword, allUsers]);
 
-```<Box
-        sx={{
-          backgroundColor: '#f5f5f5',
-          borderRadius: 2,
-          padding: 3,
-          marginTop: 2,
-          width: '100%',
-          maxWidth: 'none',
-        }}
-      >
-        <TabPanel value={tabIndex} index={0}>관리자 역할 구분</TabPanel>
-        <TabPanel value={tabIndex} index={1}>주요 기능 접근 제한</TabPanel>
-        <TabPanel value={tabIndex} index={2}>일정 등록 및 관리</TabPanel>
-        <TabPanel value={tabIndex} index={3}>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setOpen(true)}
-            sx={{ mb: 2 }}
-          >
-            새 공지사항 등록
-          </Button>
-  ```
+    //context 메뉴 관련
+    const handleMenuOpen = (event, user) => {
+      setAnchorEl(event.currentTarget);
+      setAnchorUserId(user.uid);
+    };
+  
+    const handleMenuClose = () => {
+      setAnchorEl(null);
+      setAnchorUserId(null);
+    };
+  
+    //메모 다이얼로그
+    const handleOpenMemo = (user) => {
+      setSelectedUserForMemo(user);
+      setIsMemoOpen(true);
+    };
+  
+    const handleCloseMemo = () => {
+      setSelectedUserForMemo(null);
+      setIsMemoOpen(false);
+      setMemoText("");
+      setIsWarning(false);
+      setIsBan(false);
+    };
+  
+    const handleSubmitMemo = async () => {
+      if (!selectedUserForMemo) return;
+  
+      const userRef = ref(realtimeDb, `admin/${selectedUserForMemo.uid}`);
+      const memoRef = ref(realtimeDb, `admin/${selectedUserForMemo.uid}/memo`);
+  
+      const newMemo = {
+        text: memoText.trim(),
+        timestamp: dayjs().format('YYYY-MM-DD'),
+        writer: '관리자A',
+        type: isBan ? 'ban' : isWarning ? 'warning' : 'note'
+      };
+  
+      await push(memoRef, newMemo);
+  
+      const snapshot = await get(userRef);
+      const existingData = snapshot.val();
+  
+      const updates = {};
+  
+      if (isWarning) {
+        updates.warningCount = (existingData?.warningCount ?? 0) + 1;
+      }
+      if (isBan) {
+        updates.isBanned = true;
+      }
+  
+      if (Object.keys(updates).length > 0) {
+        await update(userRef, updates);
+      }
+  
+      setAllUsers((prev) =>
+        prev.map((u) =>
+          u.uid === selectedUserForMemo.uid ? { ...u, ...updates } : u
+        )
+      );
+      setFilteredUsers((prev) =>
+        prev.map((u) =>
+          u.uid === selectedUserForMemo.uid ? { ...u, ...updates } : u
+        )
+      );
+  
+      handleCloseMemo();
+    };
+  
+  
+    const handleUnban = async (uid) => {
+      await update(ref(realtimeDb, `admin/${uid}`), { isBanned: false });
+  
+      setAllUsers((prev) =>
+        prev.map((u) => (u.uid === uid ? { ...u, isBanned: false } : u))
+      );
+      setFilteredUsers((prev) =>
+        prev.map((u) => (u.uid === uid ? { ...u, isBanned: false } : u))
+      );
+  
+      handleMenuClose();
+    };
+  
+  
+    //메모 히스토리 관련
+    const handleOpenMemoHistory = async (user) => {
+      const memoRef = ref(realtimeDb, `admin/${user.uid}/memo`);
+      const snapshot = await get(memoRef);
+  
+      if (snapshot.exists()) {
+        const memoObject = snapshot.val();
+        const memoArray = Object.values(memoObject);
+  
+        const sorted = memoArray.sort(
+          (a, b) => dayjs(b.timestamp).valueOf() - dayjs(a.timestamp).valueOf()
+        );
+        setSelectedMemoList(sorted);
+      } else {
+        setSelectedMemoList([]);
+      }
+  
+      setIsMemoHistoryOpen(true);
+    };
+  
+    //사용자 정보 수정 관련
+    const handleOpenEditDialog = (user) => {
+      setEditingUser(user);
+      setEditedEmail(user.id ?? "");
+      setEditedName(user.name ?? "");
+      setIsEditDialogOpen(true);
+    };
+  
+    //비밀번호 초기화 관련
+    const handleOpenReset = (user) => {
+      setTargetUser(user);
+      setResetEmail(user.id.includes('@') ? user.id : `${user.id}@gmail.com`);
 
-- TapPanel => 탭 번호가 ~번일 때만 안의 내용 보여줌(위의 TapPanel 컴포넌트에 서술)
-- 3번 인덱스 탭 클릭 시 setOpen(true)로 아래 Dialog 오픈
+      setIsResetOpen(true);
+    };
+  
+    const handleSendResetEmail = async () => {
+      try {
+        const emailToSend = resetEmail.includes('@') ? resetEmail.trim() : `${resetEmail.trim()}@gmail.com`;
+        await sendPasswordResetEmail(auth, emailToSend);
 
----
-#### 공지사항 등록 기능 팝업창
-
-```<Dialog open={open} onClose={() => setOpen(false)}>
-            <DialogTitle>공지사항 등록</DialogTitle>
-            <DialogContent>
-              <TextField
-                label="제목"
-                fullWidth
-                margin="normal"
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-              />
-              <TextField
-                label="URL"
-                fullWidth
-                margin="normal"
-                value={url}
-                onChange={e => setUrl(e.target.value)}
-              />
-              <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
-                <IconButton onClick={() => setIsPinned(prev => !prev)}>
-                  {isPinned ? <StarIcon color="primary" /> : <StarBorderIcon />}
-                </IconButton>
-                <Typography>{isPinned ? '대시보드에 노출됨' : '공지사항에 등록'}</Typography>
-              </Box>
-              <Box sx={{ mt: 2 }}>
-                <Button variant="contained" onClick={handleSubmit}>등록</Button>
-                <Button onClick={() => setOpen(false)} sx={{ ml: 1 }}>취소</Button>
-              </Box>
-            </DialogContent>
-</Dialog>
+        alert("비밀번호 초기화 메일이 전송되었습니다.");
+        setIsResetOpen(false);
+      } catch (error) {
+        alert("이메일 전송 실패: " + error.message);
+      }
+    };
 ```
 
-- 
+    
 
----
-
-```<TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>제목</TableCell>
-                  <TableCell>등록일</TableCell>
-                  <TableCell>고정</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {notices.map((notice) => (
-                  <TableRow key={notice.id}>
-                    <TableCell>
-                      <a href={notice.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: '#1976d2' }}>
-                        {notice.title}
-                      </a>
-                    </TableCell>
-                    <TableCell>{new Date(notice.date).toLocaleDateString()}</TableCell>
-                    <TableCell>
-                      <IconButton onClick={() => togglePinned(notice.id, notice.isPinned)}>
-                        {notice.isPinned ? <StarIcon color="warning" /> : <StarBorderIcon />}
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </TabPanel>
-      </Box>
-    </Box>
-  ```
