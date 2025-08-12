@@ -1,7 +1,7 @@
 # RefacBus_Student – 학생용 스쿨버스 예약 앱 TIL
 
 ## 개요
-- **설명**: Kotlin + Firebase 기반의 학생용 스쿨버스 예약 앱(MVVM 일부 적용)의 화면별 핵심 로직 정리
+- **설명**: Kotlin + Firebase 기반의 학생용 스쿨버스 예약 앱의 화면별 핵심 로직 정리
 - **목적**: Activity, ViewModel, Adapter, Data, UI 컴포넌트별 동작과 역할을 한눈에 파악하고, 리팩토링·유지보수 시 빠르게 참고
 
 ---
