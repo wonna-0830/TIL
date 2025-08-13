@@ -18,19 +18,6 @@
 <summary> 코드 보기 </summary>
 
 ```kotlin
-package com.example.refac_userbus.feature.register
-
-import android.content.Intent
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.view.View
-import android.widget.*
-import androidx.activity.OnBackPressedCallback
-import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModelProvider
-import com.example.refac_userbus.R
-import com.example.refac_userbus.feature.login.LoginActivity
 
 class RegisterActivity : AppCompatActivity() {
     private lateinit var viewModel: RegisterViewModel
