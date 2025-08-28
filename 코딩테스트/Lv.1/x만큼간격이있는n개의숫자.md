@@ -6,13 +6,14 @@
 - **[링크](https://school.programmers.co.kr/learn/courses/30/lessons/12954)**
 
 ## 📝 문제 요약
-> 정수 x와 자연수 n을 받아 x부터 시작해 x씩 증가하는 숫자를 n개 지니는 리스트를 리턴하기
+> 정수 x와 자연수 n을 받아 x부터 시작해 x씩 증가하는 숫자를 n개 지니는 리스트를 리턴하는 함수 만들기
 
 ## 💡 풀이 아이디어 
 - n번 동안 x에 x를 누적하는 for 문 만들기
 
 ## 🧩 구현 코드
 ```java
+//정답
 import java.util.*;
 class Solution {
     public long[] solution(int x, int n) {
@@ -28,6 +29,7 @@ class Solution {
 }
 ```
 ```java
+//내가 만든 거
 class Solution {
     public long[] solution(int x, int n) {
         long[] answer = new long[n];
